@@ -1,51 +1,51 @@
-Project Overview
-UniCareOS is a purpose‐built, permissioned ledger designed to modernize how healthcare providers exchange and audit medical records. We replaced expensive, error‐prone point‐to‐point feeds (CDs, faxes, VPN‐based HL7 links) with a single federated network—no tokens, no speculative fees—just a BAA‐ready, AWS‐hosted architecture that delivers:
+﻿Project Overview
+UniCareOS is a purposeâ€built, permissioned ledger designed to modernize how healthcare providers exchange and audit medical records. We replaced expensive, errorâ€prone pointâ€toâ€point feeds (CDs, faxes, VPNâ€based HL7 links) with a single federated networkâ€”no tokens, no speculative feesâ€”just a BAAâ€ready, AWSâ€hosted architecture that delivers:
 
-Sub-minute scan‐to‐specialist turnaround (MRI, lab reports, DICOM images).
+Sub-minute scanâ€toâ€specialist turnaround (MRI, lab reports, DICOM images).
 
-Immutable audit trails for every record write, consent change, and emergency‐access event.
+Immutable audit trails for every record write, consent change, and emergencyâ€access event.
 
-Patient‐centric consent controls via DID‐based wallets (QR scan + on‐chain signature).
+Patientâ€centric consent controls via DIDâ€based wallets (QR scan + onâ€chain signature).
 
-UniCareOS isn’t “blockchain for crypto.” It’s a HIPAA‐safe, token‐free distributed ledger that slots into existing EHR infrastructures, giving hospitals and clinics a faster, more secure way to share medical data—and patients a simple way to grant or revoke permission in real time.
+UniCareOS isnâ€™t â€œblockchain for crypto.â€ Itâ€™s a HIPAAâ€safe, tokenâ€free distributed ledger that slots into existing EHR infrastructures, giving hospitals and clinics a faster, more secure way to share medical dataâ€”and patients a simple way to grant or revoke permission in real time.
 
 Key Goals
-Real‐Time Record Exchange
+Realâ€Time Record Exchange
 
-Replace multi-day CD/fax/PACS transfers with under‐60‐second digital delivery.
+Replace multi-day CD/fax/PACS transfers with underâ€60â€second digital delivery.
 
-End‐to‐End Auditable History
+Endâ€toâ€End Auditable History
 
-Every action (record submission, consent grant/revoke, break-glass access) is cryptographically timestamped on‐chain.
+Every action (record submission, consent grant/revoke, break-glass access) is cryptographically timestamped onâ€chain.
 
 Patient-First Consent Model
 
-Patients hold their own DID in a secure wallet or smart badge. They scan a QR code to grant/revoke access—no paperwork, no middleman.
+Patients hold their own DID in a secure wallet or smart badge. They scan a QR code to grant/revoke accessâ€”no paperwork, no middleman.
 
 Plug-and-Play Integration
 
-Built‐in HL7 v2.x & FHIR adapter lets EHRs connect with a single configuration—no brittle, custom VPN feeds.
+Builtâ€in HL7 v2.x & FHIR adapter lets EHRs connect with a single configurationâ€”no brittle, custom VPN feeds.
 
 Predictable, Token-Free Costs
 
-All infrastructure runs on AWS EC2, S3 & KMS under a BAA—no per‐transaction gas fees, no price volatility.
+All infrastructure runs on AWS EC2, S3 & KMS under a BAAâ€”no perâ€transaction gas fees, no price volatility.
 
 Core Features
 Permissioned Validator Network
 
 Hospitals, labs and imaging centers run small, highly available nodes in AWS (or on-prem), each maintaining a copy of the ledger.
 
-Liquid Contracts (On‐Chain Governance)
+Liquid Contracts (Onâ€Chain Governance)
 
-Smart, zero‐downtime rules enforce bans (rate limits, peer exclusions), consent logic, and emergency access directly within the ledger.
+Smart, zeroâ€downtime rules enforce bans (rate limits, peer exclusions), consent logic, and emergency access directly within the ledger.
 
-Encrypted Off‐Chain Storage
+Encrypted Offâ€Chain Storage
 
-Medical payloads (PDFs, DICOM, images) are envelope‐encrypted with AWS KMS and stored in S3. Only the hash and metadata live on‐chain.
+Medical payloads (PDFs, DICOM, images) are envelopeâ€encrypted with AWS KMS and stored in S3. Only the hash and metadata live onâ€chain.
 
-DID‐Based Identity & Wallets
+DIDâ€Based Identity & Wallets
 
-Each patient and staff member has a decentralized identifier (DID). Hardware badges or secure mobile wallets sign transactions for on‐chain actions.
+Each patient and staff member has a decentralized identifier (DID). Hardware badges or secure mobile wallets sign transactions for onâ€chain actions.
 
 HL7 v2.x & FHIR Ingestion
 
@@ -53,11 +53,11 @@ Native adapter ingests legacy HL7 feeds or FHIR API calls, transforms them to Su
 
 Consent & Emergency Access Flows
 
-Patients scan a QR to grant or revoke permissions. In break-glass scenarios, authorized clinicians can trigger an on‐chain emergency‐access event (fully audited).
+Patients scan a QR to grant or revoke permissions. In break-glass scenarios, authorized clinicians can trigger an onâ€chain emergencyâ€access event (fully audited).
 
 Explorer & Portals
 
-Web‐based interfaces for:
+Webâ€based interfaces for:
 
 Patient Portal: View personal records, manage consents, audit history.
 
@@ -69,41 +69,41 @@ Architecture
 pgsql
 Copy
 Edit
-                          ┌──────────────────────────┐
-                          │     External Users       │
-                          │ ┌──────┐   ┌──────────┐ │
-   QR-Scan & DID Sign   │ │Patient│   │Provider │ │
-                        │ └───┬──┘   └─────┬────┘ │
-                        │     ▼              │     │
-                        │ ┌─────────────────────┐ │
-   Consent TXs & Reads  │ │    Web Explorer     │ │
-                        │ │ (React / Next.js)   │ │
-                        │ └─┬───────────────────┘ │
-                        │   │                   │  │
-                        │   ▼                   │  │
-┌────────────────────┐  │ ┌─────────────────────────┐ │
-│      Wallets       │◄─┼─│  REST API / GraphQL     │ │
-│ (Mobile & Badges)  │   │ (Node.js / Go Gateway)  │ │
-└────────────────────┘   └─┬───────────────────────┘ │
-                        │   │                       │
-                        │   ▼                       │
-                        │ ┌───────────────────────────┐
-                        │ │    Validator Node (Go)     │
-                        │ │  • P2P Gossip & Mempool    │
-                        │ │  • Block Production (3 s)  │
-                        │ │  • Liquid Contracts (Wasm) │
-                        │ │  • HL7/FHIR Adapter        │
-                        │ └─┬─────────────────────────┘
-                        │   │
-                        │   ▼
- ┌───────────────────┐  │ ┌───────────────────────────────┐  ┌─────────────────────┐
- │ AWS KMS (DEKs)    │  │ │ S3 (Encrypted Record Blobs)   │  │ Monitoring & Logs   │
- └───────────────────┘  │ └───────────────────────────────┘  │ (CloudWatch, Grafana) │
-                        │
-                        └─────────────────────────────────────────────────────┘
+                          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                          â”‚     External Users       â”‚
+                          â”‚ â”Œâ”€â”€â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+   QR-Scan & DID Sign   â”‚ â”‚Patientâ”‚   â”‚Provider â”‚ â”‚
+                        â”‚ â””â”€â”€â”€â”¬â”€â”€â”˜   â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”˜ â”‚
+                        â”‚     â–¼              â”‚     â”‚
+                        â”‚ â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+   Consent TXs & Reads  â”‚ â”‚    Web Explorer     â”‚ â”‚
+                        â”‚ â”‚ (React / Next.js)   â”‚ â”‚
+                        â”‚ â””â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
+                        â”‚   â”‚                   â”‚  â”‚
+                        â”‚   â–¼                   â”‚  â”‚
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”‚ â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+â”‚      Wallets       â”‚â—„â”€â”¼â”€â”‚  REST API / GraphQL     â”‚ â”‚
+â”‚ (Mobile & Badges)  â”‚   â”‚ (Node.js / Go Gateway)  â”‚ â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â””â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
+                        â”‚   â”‚                       â”‚
+                        â”‚   â–¼                       â”‚
+                        â”‚ â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                        â”‚ â”‚    Validator Node (Go)     â”‚
+                        â”‚ â”‚  â€¢ P2P Gossip & Mempool    â”‚
+                        â”‚ â”‚  â€¢ Block Production (3 s)  â”‚
+                        â”‚ â”‚  â€¢ Liquid Contracts (Wasm) â”‚
+                        â”‚ â”‚  â€¢ HL7/FHIR Adapter        â”‚
+                        â”‚ â””â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                        â”‚   â”‚
+                        â”‚   â–¼
+ â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”‚ â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+ â”‚ AWS KMS (DEKs)    â”‚  â”‚ â”‚ S3 (Encrypted Record Blobs)   â”‚  â”‚ Monitoring & Logs   â”‚
+ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â”‚ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â”‚ (CloudWatch, Grafana) â”‚
+                        â”‚
+                        â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 Validator Node (Go)
 
-P2P gossip, mempool, block assembly, signature validation, and on‐chain “liquid contracts” for consent, emergency access, and bans.
+P2P gossip, mempool, block assembly, signature validation, and onâ€chain â€œliquid contractsâ€ for consent, emergency access, and bans.
 
 HL7 v2.x and FHIR adapter modules ingest legacy hospital data (PDF, DICOM) and emit SubmitMedicalRecordTx.
 
@@ -113,7 +113,7 @@ Serves patient, provider, and auditor portals. Validates DID signatures for writ
 
 Web Explorer (React / Next.js)
 
-Single‐page app with Role‐Based Access:
+Singleâ€page app with Roleâ€Based Access:
 
 Patient Portal (view records, manage consents).
 
@@ -123,7 +123,7 @@ Audit Logs (export all events, filter by DID, date, eventType).
 
 AWS Services
 
-KMS: Envelope‐encrypt DEKs for each record.
+KMS: Envelopeâ€encrypt DEKs for each record.
 
 S3: Store encrypted record blobs.
 
@@ -200,25 +200,25 @@ Copy
 Edit
 cd /path/to/unicareos/explorer
 npm run dev
-Open your browser at http://localhost:3000. You’ll see:
+Open your browser at http://localhost:3000. Youâ€™ll see:
 
 Patient Portal (/patient)
 
-“Connect Wallet” button to unlock your DID.
+â€œConnect Walletâ€ button to unlock your DID.
 
 Timeline of your Medical Records (lab results, imaging, prescriptions).
 
-“Manage Consents” section to grant/revoke access to other DIDs.
+â€œManage Consentsâ€ section to grant/revoke access to other DIDs.
 
 Medical Facility (Provider) Portal (/facility)
 
-“Login as Provider” (scan badge or enter private key).
+â€œLogin as Providerâ€ (scan badge or enter private key).
 
 Search bar to lookup Patient DID.
 
-“Submit Record” form (file upload + record type).
+â€œSubmit Recordâ€ form (file upload + record type).
 
-“Emergency Access” button for break-glass scenarios.
+â€œEmergency Accessâ€ button for break-glass scenarios.
 
 Audit Logs (/audit)
 
@@ -226,11 +226,11 @@ Filters for eventType (RecordSubmitted, ConsentGranted, EmergencyAccess, Ban).
 
 Search by patientDid, accessorDid, operatorDid, or time range.
 
-“Export Logs” button to download CSV/JSON of filtered results.
+â€œExport Logsâ€ button to download CSV/JSON of filtered results.
 
 Integration & Extensibility
 HL7 / FHIR Adapter
-The Validator Node includes a built‐in adapter that listens on localhost:2575 (HL7 v2.x MLLP) or localhost:2755 (FHIR REST).
+The Validator Node includes a builtâ€in adapter that listens on localhost:2575 (HL7 v2.x MLLP) or localhost:2755 (FHIR REST).
 
 To point an EHR to your node, configure its HL7 interface to send ADT/ORU messages to host:2575 over TCP (port 2575), or set your FHIR base URL to http://<node-host>:2755/fhir.
 
@@ -240,10 +240,10 @@ Parse incoming message (e.g., lab result PDF embedded in an OBX segment or FHIR 
 
 Upload the binary to S3 (encrypted).
 
-Fire a SubmitMedicalRecordTx on‐chain with the resulting S3 URL, metadata, and operatorDid.
+Fire a SubmitMedicalRecordTx onâ€chain with the resulting S3 URL, metadata, and operatorDid.
 
 Wallet & DID Support
-We follow W3C DID standards. Each user’s DID Document (public key, endpoints) is stored in a lightweight on‐chain registry.
+We follow W3C DID standards. Each userâ€™s DID Document (public key, endpoints) is stored in a lightweight onâ€chain registry.
 
 Wallet Options:
 
@@ -253,12 +253,12 @@ Web (Browser): Uses WebAuthn / FIDO2 passkeys or a QR scanner for hardware badge
 
 To extend or swap in a new wallet:
 
-Implement the SignTx(payload: JSON) → signature interface and inject it into the REST gateway’s “Operator Signature” middleware.
+Implement the SignTx(payload: JSON) â†’ signature interface and inject it into the REST gatewayâ€™s â€œOperator Signatureâ€ middleware.
 
 Security & Compliance
 HIPAA-Compliant Encryption
 
-All PHI is encrypted off-chain using envelope encryption (AWS KMS CMK → per-record DEK).
+All PHI is encrypted off-chain using envelope encryption (AWS KMS CMK â†’ per-record DEK).
 
 Only encrypted blobs reside in S3; the on-chain ledger stores only SHA-256 hashes, metadata, and consent events.
 
@@ -270,7 +270,7 @@ Break-glass (EmergencyAccessLC) events are fully logged, multi-sig protected, an
 
 Key Recovery & Guardian Attestation
 
-Lost wallet keys can be recovered via guardians (family members, designated clinicians) or a secure “Forgot Key” flow integrated with AWS Secrets Manager.
+Lost wallet keys can be recovered via guardians (family members, designated clinicians) or a secure â€œForgot Keyâ€ flow integrated with AWS Secrets Manager.
 
 Audit-Ready Reports
 
@@ -310,13 +310,14 @@ Multi-node AWS auto-scaling, formal APN onboarding.
 
 Mobile React Native Wallet with NFC badge support.
 
-Extended “break-glass” attestation flows and multi-sig redaction.
+Extended â€œbreak-glassâ€ attestation flows and multi-sig redaction.
 
 v1.2+
 
 Sharding support per hospital group (federated shards).
 
-Plug-in marketplace for custom “liquid contracts” (e.g., insurance pre-auth).
+Plug-in marketplace for custom â€œliquid contractsâ€ (e.g., insurance pre-auth).
 
 End-to-end HIPAA audit with third-party pen-test & compliance certification.
+
 
