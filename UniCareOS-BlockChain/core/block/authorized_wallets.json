@@ -1,0 +1,18 @@
+{
+"providerID_wallet": {
+  "authorized": true,
+  "publicKey": "XTEkWdqerMoOVT0k62v0FD1mRaLx6fWAch5KhhTB6j0="
+},
+  "hospital_wallet": {
+    "authorized": true,
+    "publicKey": "BASE64_OR_HEX_PUBLIC_KEY_HOSPITAL"
+  },
+  "prov123": {
+    "authorized": true,
+    "publicKey": "BASE64_OR_HEX_PUBLIC_KEY_PROV123"
+  },
+  "test_wallet": {
+    "authorized": true,
+    "publicKey": "fMQSmSwiadIXnvo9HZ8cE6ZoIUuxhAyE5RCa3yWiuuw="
+  }
+}

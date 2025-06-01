@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UniCareOS MedicalRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^1\\.\\d+$"
+    },
+    "recordType": {
+      "type": "string",
+      "enum": ["lab_result", "imaging", "discharge_summary"]
+    },
+    "docHash": {
+      "type": "string",
+      "encrypted": true,
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "recordId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientId": {
+      "type": "string",
+      "encrypted": true
+    },
+    "patientDID": {
+      "type": "string",
+      "pattern": "^did:[a-z0-9]+:[a-zA-Z0-9.-]+$",
+      "encrypted": true
+    },
+
+    "providerId": {
+      "type": "string",
+      "encrypted": true
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "signedBy": {
+      "type": "string"
+    },
+    "consentStatus": {
+      "type": "string"
+    },
+    "dataProvenance": {
+      "type": "string"
+    },
+    "retentionPolicy": {
+      "type": "string"
+    },
+    "encryptionContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "type": "string", "enum": ["AES-GCM", "RSA-OAEP"] },
+        "iv": { "type": "string", "pattern": "^[A-Za-z0-9+/=]{16,24}$" },
+        "tag": { "type": "string", "pattern": "^[A-Za-z0-9+/=]{16,24}$" }
+      },
+      "required": ["algorithm", "iv", "tag"]
+    },
+    "payloadSignature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/=]{16,}$"
+    },
+    "notes": {
+      "type": "string",
+      "encrypted": true
+    }
+  },
+  "required": [
+    "recordId",
+    "patientId",
+    "patientDID",
+    "providerId",
+    "schemaVersion",
+    "recordType",
+    "docHash",
+    "issuedAt",
+    "signedBy",
+    "consentStatus",
+    "dataProvenance",
+    "retentionPolicy",
+    "encryptionContext",
+    "payloadSignature"
+  ]
+}

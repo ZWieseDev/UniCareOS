@@ -1,0 +1,23 @@
+{
+  "chainId": "unicare-devnet",
+  "genesisTime": "2025-05-08T17:00:00Z",
+  "initialValidators": [
+    {
+      "did": "did:unicare:dummy",
+      "pubKey": "DUMMYBASE64PUBKEY==",
+      "bond": 0
+    }
+  ],
+  "initialParams": {
+    "tokenId": "ETHOS-1",
+    "protocolVersion": "1.0.0",
+    "blockTime": 2,
+    "maxBlockSize": 2097152,
+    "confirmationDepth": 6
+  },
+  "initialSchemaHash": "0xabc123def456",
+  "signatures": [
+    "sig1_dummy",
+    "sig2_dummy"
+  ]
+}

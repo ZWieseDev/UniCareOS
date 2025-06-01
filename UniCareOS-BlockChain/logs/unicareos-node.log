@@ -1,0 +1,8 @@
+2025/05/30 15:56:51 [MEMPOOL] Archived 1 expired transaction(s) to ExpiredTxPool
+2025/05/30 15:56:51 [MEMPOOL] Auto-resubmitted expired tx 887e98d15ebd5e98309aeccab76d58c4b82de64d40992979bddfa60edf1f4588 (attempt 1)
+2025/05/30 15:58:51 [MEMPOOL] Archived 1 expired transaction(s) to ExpiredTxPool
+2025/05/30 15:58:51 [MEMPOOL] Auto-resubmitted expired tx 887e98d15ebd5e98309aeccab76d58c4b82de64d40992979bddfa60edf1f4588 (attempt 2)
+2025/05/30 16:00:51 [MEMPOOL] Archived 1 expired transaction(s) to ExpiredTxPool
+2025/05/30 16:00:51 [MEMPOOL] Auto-resubmitted expired tx 887e98d15ebd5e98309aeccab76d58c4b82de64d40992979bddfa60edf1f4588 (attempt 3)
+2025/05/30 16:02:51 [MEMPOOL] Archived 1 expired transaction(s) to ExpiredTxPool
+2025/05/30 16:02:51 [MEMPOOL] Skipping auto-resubmission for 887e98d15ebd5e98309aeccab76d58c4b82de64d40992979bddfa60edf1f4588 (limit reached)
