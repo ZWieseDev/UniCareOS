@@ -13,7 +13,8 @@
     "protocolVersion": "1.0.0",
     "blockTime": 2,
     "maxBlockSize": 2097152,
-    "confirmationDepth": 6
+    "confirmationDepth": 6,
+    "epochBlockCount": 10
   },
   "initialSchemaHash": "0xabc123def456",
   "signatures": [
