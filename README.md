@@ -1,47 +1,51 @@
-# UniCareOS - Blockchain-Powered Healthcare Data Exchange
+# UniCareOS Explorer
 
-![UniCareOS Banner](https://via.placeholder.com/1200x400/2a3b4d/ffffff?text=UniCareOS+Blockchain+Healthcare)
+> Modernizing healthcare data exchange with a HIPAA-safe, permissioned distributed ledger.
 
-## 🏥 Project Overview
+---
+
+## Overview
 
 UniCareOS is a purpose-built, permissioned ledger designed to modernize how healthcare providers exchange and audit medical records. We replace expensive, error-prone point-to-point feeds (CDs, faxes, VPN-based HL7 links) with a single federated network—no tokens, no speculative fees—just a BAA-ready, AWS-hosted architecture that delivers:
 
-- **Sub-minute scan-to-specialist turnaround** for MRIs, lab reports, and DICOM images
+- **Sub-minute scan-to-specialist turnaround** (MRI, lab reports, DICOM images)
 - **Immutable audit trails** for every record write, consent change, and emergency-access event
 - **Patient-centric consent controls** via DID-based wallets (QR scan + on-chain signature)
 
-UniCareOS isn't "blockchain for crypto." It's a HIPAA-safe, token-free distributed ledger that integrates with existing EHR infrastructures, giving healthcare providers a faster, more secure way to share medical data.
+UniCareOS isn’t “blockchain for crypto.” It’s a HIPAA-safe, token-free distributed ledger that slots into existing EHR infrastructures, giving hospitals and clinics a faster, more secure way to share medical data—and patients a simple way to grant or revoke permission in real time.
 
-## 🎯 Key Features
+---
 
-### 🔄 Real-Time Record Exchange
-- Replace multi-day CD/fax/PACS transfers with under-60-second digital delivery
-- Built-in HL7 v2.x & FHIR adapters for seamless EHR integration
+## Key Goals
 
-### 🔒 End-to-End Security
-- Encrypted off-chain storage with AWS KMS envelope encryption
-- On-chain metadata and consent management
-- DID-based identity for patients and providers
+- **Real-Time Record Exchange:** Replace multi-day CD/fax/PACS transfers with under-60-second digital delivery.
+- **End-to-End Auditable History:** Every action (record submission, consent grant/revoke, break-glass access) is cryptographically timestamped on-chain.
+- **Patient-First Consent Model:** Patients hold their own DID in a secure wallet or smart badge. They scan a QR code to grant/revoke access—no paperwork, no middleman.
+- **Plug-and-Play Integration:** Built-in HL7 v2.x & FHIR adapter lets EHRs connect with a single configuration—no brittle, custom VPN feeds.
+- **Predictable, Token-Free Costs:** All infrastructure runs on AWS EC2, S3 & KMS under a BAA—no per-transaction gas fees, no price volatility.
 
-### 📊 Comprehensive Portals
+---
 
-#### Patient Portal
-![Patient Portal](./images/Patient%20Portal%20Preview.png)
-*View personal records, manage consents, and track access history*
+## Core Features
 
-#### Facility Portal
-![Facility Portal](./images/Facility%20Portal.png)
-*Submit new records, manage patient consents, and handle emergency access requests*
+- **Permissioned Validator Network:** Hospitals, labs, and imaging centers run small, highly available nodes in AWS (or on-prem), each maintaining a copy of the ledger.
+- **Liquid Contracts (On-Chain Governance):** Smart, zero-downtime rules enforce bans (rate limits, peer exclusions), consent logic, and emergency access directly within the ledger.
+- **Encrypted Off-Chain Storage:** Medical payloads (PDFs, DICOM, images) are envelope-encrypted with AWS KMS and stored in S3. Only the hash and metadata live on-chain.
+- **DID-Based Identity & Wallets:** Each patient and staff member has a decentralized identifier (DID). Hardware badges or secure mobile wallets sign transactions for on-chain actions.
+- **HL7 v2.x & FHIR Ingestion:** Native adapter ingests legacy HL7 feeds or FHIR API calls, transforms them to `SubmitMedicalRecordTx`, and publishes on the ledger.
+- **Consent & Emergency Access Flows:** Patients scan a QR to grant or revoke permissions. In break-glass scenarios, authorized clinicians can trigger an on-chain emergency-access event (fully audited).
 
-#### Audit Portal
-![Audit Portal](./images/Audit%20Portal.png)
-*Track all system activities with immutable, timestamped records*
+---
 
-#### Blockchain Explorer
-![Blockchain Explorer](./images/Explorer%20Homepage.png)
-*Monitor transactions, blocks, and network health in real-time*
+## Explorer & Portals
 
-## 🏗️ Architecture
+- **Patient Portal:** View personal records, manage consents, audit history.
+- **Facility Portal:** Providers submit records, view patients under consent, request emergency access.
+- **Audit Logs:** Compliance officers drill into every event, export CSV/JSON, and verify HIPAA requirements.
+
+---
+
+## Architecture (Text Diagram)
 
 ```
                           ┌──────────────────────────┐
@@ -65,7 +69,7 @@ UniCareOS isn't "blockchain for crypto." It's a HIPAA-safe, token-free distribut
                         │ ┌───────────────────────────┐
                         │ │    Validator Node (Go)     │
                         │ │  • P2P Gossip & Mempool    │
-                        │ │  • Block Production (3s)   │
+                        │ │  • Block Production (3 s)  │
                         │ │  • Liquid Contracts (Wasm) │
                         │ │  • HL7/FHIR Adapter        │
                         │ └─┬─────────────────────────┘
@@ -76,84 +80,29 @@ UniCareOS isn't "blockchain for crypto." It's a HIPAA-safe, token-free distribut
  └───────────────────┘  │ └───────────────────────────────┘  │ (CloudWatch, Grafana) │
                         │
                         └─────────────────────────────────────────────────────┘
+
 ```
 
-## 🚀 Getting Started
+## Screenshots
 
-### Prerequisites
+### Patient Portal
+![Patient Portal](./images/Patient%20Portal%20Preview.png)
 
-- Go 1.20+
-- Node.js 16+ (for Explorer/UI)
-- Docker (for local development)
-- AWS Account (for KMS, S3 in production)
+### Facility Portal
+![Facility Portal](./images/Facility%20Portal.png)
 
-### Local Development Setup
+### Audit Portal
+![Audit Portal](./images/Audit%20Portal.png)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ZWieseDev/UniCareOS.git
-   cd UniCareOS
-   ```
-
-2. **Start LocalStack (S3 & KMS emulation)**
-   ```bash
-   docker run --rm -it -e SERVICES="s3,kms" -p 4566:4566 localstack/localstack
-   ```
-
-3. **Configure AWS CLI for LocalStack**
-   ```bash
-   aws configure set aws_access_key_id test
-   aws configure set aws_secret_access_key test
-   aws configure set region us-east-1
-   aws configure set endpoint_url http://localhost:4566
-   ```
-
-4. **Create S3 bucket & KMS key**
-   ```bash
-   aws --endpoint-url=http://localhost:4566 kms create-key --description "UniCareOS Local DEK"
-   aws --endpoint-url=http://localhost:4566 s3api create-bucket --bucket unicareos-records
-   ```
-
-5. **Build and start the Validator Node**
-   ```bash
-   cd cmd/unicare-node
-   go build -o unicare-node .
-   ./unicare-node --config=../../config/local-config.yaml
-   ```
-
-6. **Start the Explorer UI**
-   ```bash
-   cd ../../explorer
-   npm install
-   npm run dev
-   ```
-
-Visit `http://localhost:3000` to access the Explorer interface.
-
-## 📚 Documentation
-
-For detailed documentation, including API references and deployment guides, please visit our [Wiki](https://github.com/ZWieseDev/UniCareOS/wiki).
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get started.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📞 Contact
-
-For inquiries, please contact [resume@zwiese.com](mailto:resume@zwiese.com).
+### Explorer Homepage
+![Blockchain Explorer](./images/Explorer%20Homepage.png)
 
 ---
 
-<div align="center">
-  Made with ❤️ by ZWieseDev | [View on GitHub](https://github.com/ZWieseDev/UniCareOS)
-</div>
+## Support
+
+For questions or issues, please contact [Your Support Contact Here].
+
+---
+
+*Last updated: June 1, 2025*
