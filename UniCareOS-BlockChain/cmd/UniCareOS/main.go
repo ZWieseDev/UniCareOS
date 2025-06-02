@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"unicareos/core/state"
 	"log"
 	"bytes"
 	"os"
@@ -193,13 +194,25 @@ func() {
 		if err != nil {
 			log.Fatalf("❌ Failed to save genesis block: %v", err)
 		}
-		fmt.Println("🌟 Genesis block created and saved!")
+		fmt.Println(" Genesis block created and saved!")
 	} else {
-		fmt.Println("✅ Genesis block already exists.")
+		fmt.Println(" Genesis block already exists.")
 	}
 
+	// === Load genesis config for epoch settings ===
+	genesisCfg, err := genesis.LoadGenesisConfig("genesis.json")
+	if err != nil {
+		log.Fatalf(" Failed to load genesis config: %v", err)
+	}
+	epochBlockCount := genesisCfg.InitialParams.EpochBlockCount
+
 	// === Network ===
-	network := networking.NewNetwork(networkListenAddr, store, 8080, pubKey, privKey)
+	// --- Initialize ChainState and load epoch state ---
+	chainState := &state.ChainState{StateDB: store}
+	if err := chainState.LoadEpochState(); err != nil {
+		fmt.Printf("[EPOCH] Failed to load epoch state: %v\n", err)
+	}
+	network := networking.NewNetwork(networkListenAddr, store, 8080, pubKey, privKey, chainState, epochBlockCount)
 	// Set block production interval for networking
 	network.BlockProductionInterval = blockProductionInterval
 
@@ -210,6 +223,21 @@ func() {
 			fmt.Printf("[ERROR] Failed to persist latest block ID: %v\n", err)
 		}
 		fmt.Printf("[RECOVERY] Set network tip to block %x at height %d\n", tipBlockID, maxHeight)
+
+		// Load the tip block from storage and update epoch state
+		blockBytes, err := store.GetBlock(tipBlockID[:])
+		if err == nil && blockBytes != nil {
+			tipBlockObj, err := block.Deserialize(blockBytes)
+			if err == nil && tipBlockObj != nil {
+				chainState.Epoch = tipBlockObj.Epoch
+				chainState.BlocksInEpoch = tipBlockObj.Height % uint64(epochBlockCount)
+				fmt.Printf("[EPOCH] ChainState updated from tip block: Epoch=%d, BlocksInEpoch=%d\n", chainState.Epoch, chainState.BlocksInEpoch)
+			} else {
+				fmt.Printf("[EPOCH] Could not deserialize tip block for epoch state update: %v\n", err)
+			}
+		} else {
+			fmt.Printf("[EPOCH] Could not load tip block for epoch state update: %v\n", err)
+		}
 	}
 
 	// === Mempool wiring ===

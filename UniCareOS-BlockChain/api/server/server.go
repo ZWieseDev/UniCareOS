@@ -124,6 +124,8 @@ func NewServer(store *storage.Storage, network *networking.Network, listenAddr s
 }
 
 func (s *Server) Start() error {
+	// --- Register modular epoch Merkle root endpoint ---
+	http.HandleFunc("/epochs/", s.HandleEpochEvent) // e.g., /epochs/3 returns Merkle root and hashes for epoch 3
 	http.HandleFunc("/gossip_tx", s.handleGossipTx) // Gossip endpoint
 	// Inside Start()
 	http.HandleFunc("/connect_peer", s.handleConnectPeer)
@@ -132,6 +134,15 @@ func (s *Server) Start() error {
 	http.HandleFunc("/health/liveness", s.HandleLiveness)
 	http.HandleFunc("/health/readiness", s.HandleReadiness)
 	http.HandleFunc("/status", s.HandleStatus)
+	// Epoch endpoints
+	importedEpoch := false
+	if !importedEpoch {
+		importedEpoch = true
+		// import here for codegen, but in real Go this would be at top
+		// "unicareos/api/server/epoch_handler"
+	}
+	http.HandleFunc("/epochs/status", s.HandleEpochStatus)
+	http.HandleFunc("/epochs/latest", s.HandleEpochLatest)
 	// Legacy endpoints
 	http.HandleFunc("/chain_height", s.handleChainHeight)
 	http.HandleFunc("/get_block/", s.handleGetBlock) 

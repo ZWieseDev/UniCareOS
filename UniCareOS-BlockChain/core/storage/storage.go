@@ -10,13 +10,30 @@ import (
 	"encoding/hex"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
-	"unicareos/core/block"
+    "unicareos/core/block"
 )
+// StateBackend abstracts the persistent key-value store for blockchain state.
+type StateBackend interface {
+	Get(key string) ([]byte, error)
+	Put(key string, value []byte) error
+}
+
+
 
 
 
 type Storage struct {
 	db *leveldb.DB
+}
+
+// Get retrieves a value by key from LevelDB.
+func (s *Storage) Get(key string) ([]byte, error) {
+	return s.db.Get([]byte(key), nil)
+}
+
+// Put stores a key-value pair in LevelDB.
+func (s *Storage) Put(key string, value []byte) error {
+	return s.db.Put([]byte(key), value, nil)
 }
 
 func NewStorage(path string) (*Storage, error) {

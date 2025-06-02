@@ -2,6 +2,7 @@ package networking
 
 import (
 	"bufio"
+	"unicareos/core/state"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -38,6 +39,7 @@ type Peer struct {
 
 
 type Network struct {
+	ChainState *state.ChainState // Pointer to ChainState for epoch tracking
 	// ... existing fields ...
 	BlockProductionInterval time.Duration
 	// Dynamic set of block producers (pubkey hex → present)
@@ -58,6 +60,8 @@ type Network struct {
 	lock          sync.Mutex
 	latestBlockID [32]byte
 
+	EpochBlockCount int // Number of blocks per epoch, from genesis config
+
 	recentBlocks      map[string]struct{} // BlockID hex → exists (for deduplication)
 	bannedPeers       map[string]time.Time
 	peerRequestCounts map[string][]time.Time
@@ -69,7 +73,7 @@ type Network struct {
 	Mempool *mempool.Mempool // Reference to the mempool for block production
 }
 
-func NewNetwork(listenAddr string, store *storage.Storage, apiPort int, pubKey, privKey []byte) *Network {
+func NewNetwork(listenAddr string, store *storage.Storage, apiPort int, pubKey, privKey []byte, chainState *state.ChainState, epochBlockCount int) *Network {
 	// Cleanup: Remove any address-based entries from ProducersDynamic
 	cleanupProducerTable := func(producers map[string]struct{}) {
 		for k := range producers {
@@ -82,6 +86,8 @@ func NewNetwork(listenAddr string, store *storage.Storage, apiPort int, pubKey, 
 	}
 
 	n := &Network{
+		ChainState: chainState,
+		EpochBlockCount: epochBlockCount,
 		listenAddr:    listenAddr,
 		apiPort:       apiPort,
 		peers:         []Peer{},
@@ -329,6 +335,18 @@ func (n *Network) ProduceBlock() error {
 		BanEvents:       nil, // TODO: gather pending ban events
 		ExtraData:       nil,
 		ValidatorDID:    fmt.Sprintf("ed25519:%x", n.PubKey), // Store public key as DID
+	}
+	// --- Set block epoch based on block height and epoch block count ---
+	epochBlockCount := uint64(n.EpochBlockCount)
+	if epochBlockCount == 0 {
+		epochBlockCount = 1 // prevent division by zero
+	}
+	if nextHeight > 0 {
+		newBlock.Epoch = (nextHeight - 1) / epochBlockCount
+		fmt.Printf("[EPOCH] Setting block epoch to %d for block at height %d (epochBlockCount=%d)\n", newBlock.Epoch, newBlock.Height, epochBlockCount)
+	} else {
+		newBlock.Epoch = 0
+		fmt.Printf("[EPOCH] Setting block epoch to 0 for genesis block\n")
 	}
 
 	if len(includedTxIDs) > 0 {
@@ -890,6 +908,24 @@ func (n *Network) reclaimAndDiscardOrphanBlock(blk block.Block) {
 }
 
 func (n *Network) SaveNewBlock(blk block.Block) error {
+	// --- Epoch tracking ---
+	if n.ChainState != nil {
+		// Increment BlocksInEpoch
+		n.ChainState.BlocksInEpoch++
+		// Get EpochBlockCount (assume field for now)
+		if n.ChainState.BlocksInEpoch >= uint64(n.EpochBlockCount) { // epoch boundary
+			fmt.Printf("[EPOCH] Epoch %d ended after %d blocks\n", n.ChainState.Epoch, n.ChainState.BlocksInEpoch)
+			// Epoch-end logic here
+			n.ChainState.Epoch++
+			n.ChainState.BlocksInEpoch = 0
+		}
+		// Persist epoch state
+		err := n.ChainState.SaveEpochState()
+		if err != nil {
+			fmt.Printf("[EPOCH] Failed to persist epoch state: %v\n", err)
+		}
+	}
+
     defer func() {
         if r := recover(); r != nil {
             fmt.Printf("[PANIC] SaveNewBlock panicked: %v\n", r)

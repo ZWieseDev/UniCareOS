@@ -1,0 +1,7 @@
+[AUDIT] 2025/05/24 03:22:56 base64_check | patientId is not valid base64
+[AUDIT] 2025/05/24 20:01:49 unauthorized | EventID=, Reason=Unauthorized wallet address: unauthorized_wallet
+[AUDIT] 2025/05/24 20:01:49 failed | EventID=, Reason=Validation failed: payload failed schema validation: recordId: Does not match format 'uuid'; 
+[AUDIT] 2025/05/24 20:01:49 invalid_signature | EventID=, Reason=Signature verification failed: invalid signature
+[AUDIT] 2025/05/24 20:06:02 accepted | EventID=evt1, Reason=ok, EntryHash=65d0cc02b0b2baa23a15518a331c4588ac79a0a6deb3d997e3e1a2fa27fa97bc
+[AUDIT] 2025/05/24 20:06:02 failed | EventID=evt2, Reason=bad sig, EntryHash=f1eabc728ed8394350c774df8e3ebc8682f25328de651a5de83c9cf9bd3a97b7
+[AUDIT] 2025/05/24 20:06:02 duplicate | EventID=evt3, Reason=already exists, EntryHash=df624172a8fd862e59bfcbca365c8cf2fc9b957745b8f6a4e2e7ffd579c0f1a3
