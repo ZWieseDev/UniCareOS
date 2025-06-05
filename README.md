@@ -86,16 +86,16 @@ UniCareOS isn’t “blockchain for crypto.” It’s a HIPAA-safe, token-free d
 ## Screenshots
 
 ### Patient Portal
-![Patient Portal](./images/Patient%20Portal%20Preview.png)
+![Patient Portal](./assets/images/Patient%20Portal%20Preview.png)
 
 ### Facility Portal
-![Facility Portal](./images/Facility%20Portal.png)
+![Facility Portal](./assets/images/Facility%20Portal.png)
 
 ### Audit Portal
-![Audit Portal](./images/Audit%20Portal.png)
+![Audit Portal](./assets/images/Audit%20Portal.png)
 
 ### Explorer Homepage
-![Blockchain Explorer](./images/Explorer%20Homepage.png)
+![Blockchain Explorer](./assets/images/Explorer%20Homepage.png)
 
 ---
 
