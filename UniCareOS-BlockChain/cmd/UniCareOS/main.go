@@ -32,7 +32,7 @@ import (
 type FinalizerAuditLogger struct{}
 
 func (l *FinalizerAuditLogger) LogFinalization(txID string, status block.FinalizationStatus, reason string) error {
-	fmt.Printf("[FINALIZER AUDIT] txID=%s status=%v reason=%s\n", txID, status, reason)
+	//fmt.Printf("[FINALIZER AUDIT] txID=%s status=%v reason=%s\n", txID, status, reason)
 	return nil
 }
 
@@ -335,7 +335,7 @@ func() {
 
 	if produceBlocks {
 		go func() {
-			fmt.Println("[BLOCK PRODUCER] Fallback-enabled goroutine started")
+
 			for {
 				// Remove stale/disconnected producers before each round
 				network.RemoveDisconnectedProducers()
@@ -382,18 +382,18 @@ func() {
 				if myIdx == leaderIdx {
 					chain.ConsecutiveFallbacks = 0 // Reset on leader
 					// I'm the leader for this slot, try immediately
-					fmt.Printf("[BLOCK PRODUCER] My turn (height %d, leader idx %d)\n", height, leaderIdx)
+
 					err := network.ProduceBlock()
 					if err != nil {
-						fmt.Printf("[BLOCK PRODUCER] Failed: %v\n", err)
+
 					} else {
-						fmt.Println("[BLOCK PRODUCER] Block produced.")
+
 					}
 					// Wait 1.5s for fallback window
 					time.Sleep(blockProductionInterval)
 				} else if myIdx == fallbackIdx {
 					chain.ConsecutiveFallbacks++
-					fmt.Printf("[BLOCK PRODUCER] Fallback turn (height %d, fallback idx %d) [consecutive: %d]\n", height, fallbackIdx, chain.ConsecutiveFallbacks)
+
 
 					// Wait for grace period before producing fallback
 					time.Sleep(fallbackGracePeriod)
@@ -415,9 +415,9 @@ func() {
 					// If no peer is ahead, proceed with fallback block production
 					err := network.ProduceBlock()
 					if err != nil {
-						fmt.Printf("[BLOCK PRODUCER] Fallback failed: %v\n", err)
+
 					} else {
-						fmt.Println("[BLOCK PRODUCER] Fallback block produced.")
+
 					}
 					// Wait for next slot
 					time.Sleep(blockProductionInterval - fallbackGracePeriod)
@@ -490,7 +490,7 @@ func() {
 		fmt.Printf("\033[31m[ERROR] finalizer_private.key is not 64 bytes after base64 decoding (got %d bytes)\033[0m\n", len(privKeyBytes))
 		os.Exit(1)
 	}
-	fmt.Printf("\033[32m[DEBUG] Loaded finalizer private key from %s: length=%d first8=%x last8=%x\033[0m\n", keyPath, len(privKeyBytes), privKeyBytes[:8], privKeyBytes[len(privKeyBytes)-8:])
+
 	finalizerPrivKey = privKeyBytes
 
 	finalizer := block.NewFinalizer(authorizedFinalizers, &FinalizerAuditLogger{}, finalizerPrivKey)

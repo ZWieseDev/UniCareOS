@@ -10,7 +10,7 @@ import (
 	"encoding/hex"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
-    "unicareos/core/block"
+    "unicareos/core/types"
 )
 // StateBackend abstracts the persistent key-value store for blockchain state.
 type StateBackend interface {
@@ -45,16 +45,19 @@ func NewStorage(path string) (*Storage, error) {
 }
 
 func (s *Storage) SaveBlock(blockID []byte, blockData []byte) error {
+	// Debug: print blockID and blockData
+
+	var blk types.Block
+	err := json.Unmarshal(blockData, &blk)
+ 	if err == nil {
+ 		// (no-op; debug loop removed)
+	}
+
 	enc, err := Encrypt(blockData)
 	if err != nil {
 		return err
 	}
-	// Unmarshal to get block height
-	var blk block.Block
-	err = json.Unmarshal(blockData, &blk)
-	if err != nil {
-		return err
-	}
+	// Use the previously unmarshaled blk for height
 	blockKey := []byte("block:" + fmt.Sprintf("%x", blockID))
 	heightKey := []byte(fmt.Sprintf("height:%d", blk.Height))
 	batch := new(leveldb.Batch)
@@ -113,8 +116,10 @@ func (s *Storage) GetBlockIDByHeight(height int) ([]byte, error) {
 }
 
 // GetBlockByHeight uses the height index for O(1) lookup
-func (s *Storage) GetBlockByHeight(height int) (block.Block, error) {
-	var blk block.Block
+func (s *Storage) GetBlockByHeight(height int) (types.Block, error) {
+	
+
+	var blk types.Block
 	blockID, err := s.GetBlockIDByHeight(height)
 	if err != nil {
 		return blk, err
@@ -124,8 +129,18 @@ func (s *Storage) GetBlockByHeight(height int) (block.Block, error) {
 		return blk, err
 	}
 	err = json.Unmarshal(data, &blk)
+	if err != nil {
+		return blk, err
+	}
+
+	if blk.Events != nil && len(blk.Events) > 0 {
+
+	} else {
+
+	}
 	return blk, err
 }
+
 func (s *Storage) Iterator() iterator.Iterator {
 	return s.db.NewIterator(nil, nil)
 }
@@ -148,6 +163,8 @@ func (s *Storage) GetGenesisBlock() ([]byte, error) {
 }
 
 func (s *Storage) ListRecentBlocks(max int) ([]map[string]string, error) {
+
+
 	var summaries []map[string]string
 
 	iter := s.db.NewIterator(nil, nil)
@@ -160,7 +177,7 @@ func (s *Storage) ListRecentBlocks(max int) ([]map[string]string, error) {
 			continue // Only process actual block data
 		}
 
-		var blk block.Block
+		var blk types.Block
 		dec, err := Decrypt(iter.Value())
 		if err != nil {
 			continue // skip broken blocks or decryption errors
@@ -169,6 +186,7 @@ func (s *Storage) ListRecentBlocks(max int) ([]map[string]string, error) {
 		if err != nil {
 			continue // skip broken blocks
 		}
+
 
 		summaries = append(summaries, map[string]string{
 			"blockID":   fmt.Sprintf("%x", blk.BlockID[:]),
@@ -196,7 +214,7 @@ func (s *Storage) RollbackToBlock(forkPoint [32]byte) error {
 		if err != nil {
 			break // Stop at missing block
 		}
-		var blk block.Block
+		var blk types.Block
 		err = json.Unmarshal(blkBytes, &blk)
 		if err != nil {
 			break
@@ -224,7 +242,7 @@ func (s *Storage) RollbackToBlock(forkPoint [32]byte) error {
 			height := -1
 			blkBytes, err := s.GetBlock([]byte(idHex))
 			if err == nil {
-				var blk block.Block
+				var blk types.Block
 				err = json.Unmarshal(blkBytes, &blk)
 				if err == nil {
 					height = int(blk.Height)

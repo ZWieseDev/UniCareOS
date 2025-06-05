@@ -8,7 +8,7 @@ import (
 
 type ChainedEvent struct {
     // ...existing fields...
-	recordId string `json:"recordId,omitempty"` // Medical record unique identifier
+	RecordID string `json:"recordId,omitempty"` // Medical record unique identifier
 	EventID         ids.ID
 	EventType       string
 	Description     string
@@ -18,10 +18,15 @@ type ChainedEvent struct {
 	PatientID       string             `json:"patientId,omitempty"`
 	ProviderID      string             `json:"providerId,omitempty"`
 	Epoch           uint64             `json:"epoch,omitempty"`
-
+	Finalized       bool               `json:"finalized,omitempty"`
     // HIPAA-compliant finalized event embedding
     PayloadHash string `json:"payloadHash,omitempty"` // Hash of encrypted payload (for Merkle root)
     PayloadRef  string `json:"payloadRef,omitempty"`  // URI or pointer to encrypted payload (off-chain)
+
+    // Revision tracking fields
+    RevisionReason string   `json:"revisionReason,omitempty"`
+    RevisionOf     string   `json:"revisionOf,omitempty"`
+    DocLineage     []string `json:"docLineage,omitempty"`
 }
 
 // ✅ Keep ONLY THIS here

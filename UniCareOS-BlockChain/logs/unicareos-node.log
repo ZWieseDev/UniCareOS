@@ -6,3 +6,9 @@
 2025/05/30 16:00:51 [MEMPOOL] Auto-resubmitted expired tx 887e98d15ebd5e98309aeccab76d58c4b82de64d40992979bddfa60edf1f4588 (attempt 3)
 2025/05/30 16:02:51 [MEMPOOL] Archived 1 expired transaction(s) to ExpiredTxPool
 2025/05/30 16:02:51 [MEMPOOL] Skipping auto-resubmission for 887e98d15ebd5e98309aeccab76d58c4b82de64d40992979bddfa60edf1f4588 (limit reached)
+2025/06/04 05:23:07 http: TLS handshake error from 127.0.0.1:48882: remote error: tls: bad certificate
+2025/06/04 05:53:39 http: TLS handshake error from 127.0.0.1:48888: remote error: tls: bad certificate
+2025/06/05 02:20:58 http: TLS handshake error from 127.0.0.1:48908: remote error: tls: bad certificate
+2025/06/05 02:24:46 http: TLS handshake error from 127.0.0.1:48910: remote error: tls: bad certificate
+2025/06/05 02:25:45 http: TLS handshake error from 127.0.0.1:48912: remote error: tls: bad certificate
+2025/06/05 04:36:07 http: TLS handshake error from 127.0.0.1:48938: remote error: tls: bad certificate

@@ -3,11 +3,10 @@ package block
 import (
 	"encoding/json"
 	"time"
-
 	"unicareos/types/ids"
 )
 
-// BanEvent represents a ban to be enforced network-wide via the blockchain.
+// BanEvent now lives in types/blocktypes.go
 type BanEvent struct {
 	Address   string    `json:"address"`   // Banned peer IP or identifier
 	Expiry    string    `json:"expiry"`    // RFC3339 expiry time

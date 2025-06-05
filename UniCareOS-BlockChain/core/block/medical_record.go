@@ -18,6 +18,8 @@ type MedicalRecordSubmission struct {
 	Signature            string                 `json:"signature"` // Base64-encoded signature
 	WalletAddress        string                 `json:"walletAddress"` // Provider wallet address
 	RevisionOf           string                 `json:"revisionOf,omitempty"` // Optional prior record ID
+	RevisionReason       string                 `json:"revisionReason,omitempty"` // Optional revision reason
+	DocLineage           []string               `json:"docLineage,omitempty"` // Optional document lineage
 	SubmissionTimestamp  time.Time              `json:"submissionTimestamp"` // RFC3339 timestamp
 }
 
@@ -127,8 +129,9 @@ func init() {
 }
 
 
+
+
 func SubmitRecordToBlock(submission MedicalRecordSubmission, block *Block) (TransactionReceipt, error) {
-	// 0. Access control: Only allow authorized wallets
 	if !IsAuthorizedWallet(submission.WalletAddress) {
 		receipt := TransactionReceipt{
 			TxID:        "",
@@ -167,11 +170,34 @@ func SubmitRecordToBlock(submission MedicalRecordSubmission, block *Block) (Tran
 		return receipt, err
 	}
 
+	// Check if revision target exists (but do not block based on Finalized)
+	if submission.RevisionOf != "" {
+		foundOriginal := false
+		for i := range block.Events {
+			if block.Events[i].EventID.String() == submission.RevisionOf {
+				foundOriginal = true
+				break
+			}
+		}
+		if !foundOriginal {
+			errMsg := fmt.Sprintf("original record for revision not found: %s", submission.RevisionOf)
+			LogSubmissionTrace(block, submission.RevisionOf, submission.WalletAddress, "rejected_revision_target_not_found", errMsg, submission.SubmissionTimestamp)
+			receipt := TransactionReceipt{
+				TxID:        "",
+				BlockHash:   "",
+				BlockHeight: block.Height,
+				Status:      "failed",
+				Errors:      []string{fmt.Sprintf("Original event %s for revision not found.", submission.RevisionOf)},
+			}
+			return receipt, fmt.Errorf(errMsg)
+		}
+	}
+
 	// 3. Check for duplicate/replay
 	if submission.Record != nil {
 		recordId, _ := submission.Record["recordId"].(string)
 		for _, evt := range block.Events {
-			if evt.EventType == "medical_record" && evt.recordId == recordId && recordId != "" {
+			if evt.EventType == "medical_record" && evt.RecordID == recordId && recordId != "" {
 				receipt := TransactionReceipt{
 					TxID:        "",
 					BlockHash:   "",
@@ -187,17 +213,64 @@ func SubmitRecordToBlock(submission MedicalRecordSubmission, block *Block) (Tran
 
 	// 4. Update the block with the new event/transaction
 	recordId, _ := submission.Record["recordId"].(string)
+
+	// --- Always build lineage recursively from revisionOf ---
+	var docLineage []string
+	if submission.RevisionOf != "" {
+		visited := make(map[string]bool)
+		currentID := submission.RevisionOf
+		for len(currentID) > 0 && !visited[currentID] {
+			visited[currentID] = true
+			found := false
+			for _, evt := range block.Events {
+				if evt.EventID.String() == currentID {
+					if evt.DocLineage != nil {
+						docLineage = append(docLineage, evt.DocLineage...)
+					}
+					docLineage = append(docLineage, currentID)
+					currentID = evt.RevisionOf
+					found = true
+					break
+				}
+			}
+			if !found {
+				break
+			}
+		}
+	}
+	// --- End lineage logic ---
+	// Reverse to chronological order
+	for i, j := 0, len(docLineage)-1; i < j; i, j = i+1, j-1 {
+		docLineage[i], docLineage[j] = docLineage[j], docLineage[i]
+	}
 	event := ChainedEvent{
-		recordId: recordId,
+		RecordID: recordId,
 		EventID:         generateEventID(submission), // Helper function to generate unique event ID
 		EventType:       "medical_record",
 		Description:     "Medical record submission",
 		Timestamp:       submission.SubmissionTimestamp,
 		AuthorValidator: ids.IDFromString(submission.WalletAddress), // Helper to convert address to ID
+		RevisionReason:  submission.RevisionReason,
+		RevisionOf:      submission.RevisionOf,
+		DocLineage:      docLineage,
+		Finalized:       false, // New events are not finalized by default
 		// Add more fields as needed
 	}
 	block.Events = append(block.Events, event)
+	// Debug log: print event struct as JSON
+	
+	if _, err := json.MarshalIndent(event, "", "  "); err == nil {
+		//fmt.Printf("\033[33m[DEBUG ChainedEvent]\033[0m %s\n", string(debugJson))
+	} else {
+		//fmt.Printf("\033[31m[DEBUG ChainedEvent ERROR]\033[0m %v\n", err)
+	}
+	
 
+	// --- Highlighted lineage log for revisions ---
+	if submission.RevisionOf != "" {
+		fmt.Printf("\033[33m[REVISION TRACKED]\033[0m eventID=%s revisionOf=%s reason=\"%s\" lineage=%v\n",
+			event.EventID.String(), event.RevisionOf, event.RevisionReason, event.DocLineage)
+	}
 	// 5. Log the submission for audit/compliance
 	LogSubmissionTrace(block, event.EventID.String(), submission.WalletAddress, "accepted", "Submission accepted and added to block", submission.SubmissionTimestamp)
 
