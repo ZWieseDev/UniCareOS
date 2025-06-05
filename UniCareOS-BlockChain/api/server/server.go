@@ -20,6 +20,7 @@ import (
 	"unicareos/types/ids"
 	"unicareos/core/mempool"
 	"github.com/golang-jwt/jwt/v5"
+	"unicareos/core/types"
 
 	log "log"
 
@@ -124,6 +125,8 @@ func NewServer(store *storage.Storage, network *networking.Network, listenAddr s
 }
 
 func (s *Server) Start() error {
+	// --- Register modular epoch Merkle root endpoint ---
+	http.HandleFunc("/epochs/", s.HandleEpochEvent) // e.g., /epochs/3 returns Merkle root and hashes for epoch 3
 	http.HandleFunc("/gossip_tx", s.handleGossipTx) // Gossip endpoint
 	// Inside Start()
 	http.HandleFunc("/connect_peer", s.handleConnectPeer)
@@ -132,6 +135,15 @@ func (s *Server) Start() error {
 	http.HandleFunc("/health/liveness", s.HandleLiveness)
 	http.HandleFunc("/health/readiness", s.HandleReadiness)
 	http.HandleFunc("/status", s.HandleStatus)
+	// Epoch endpoints
+	importedEpoch := false
+	if !importedEpoch {
+		importedEpoch = true
+		// import here for codegen, but in real Go this would be at top
+		// "unicareos/api/server/epoch_handler"
+	}
+	http.HandleFunc("/epochs/status", s.HandleEpochStatus)
+	http.HandleFunc("/epochs/latest", s.HandleEpochLatest)
 	// Legacy endpoints
 	http.HandleFunc("/chain_height", s.handleChainHeight)
 	http.HandleFunc("/get_block/", s.handleGetBlock) 
@@ -170,7 +182,7 @@ func (s *Server) Start() error {
 	keyPath := os.Getenv("TLS_KEY_PATH")
 
 	if enableHTTPS == "true" {
-		fmt.Println("[HTTPS] Enabled. Using cert:", certPath, "key:", keyPath)
+		//fmt.Println("[HTTPS] Enabled. Using cert:", certPath, "key:", keyPath)
 		return http.ListenAndServeTLS(s.ListenAddr, certPath, keyPath, nil)
 	} else {
 		fmt.Println("[HTTPS] Disabled. Serving HTTP only!")
@@ -544,7 +556,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tipBlock block.Block
+	var tipBlock types.Block
 	err = json.Unmarshal(tipBlockBytes, &tipBlock)
 	if err != nil {
 		http.Error(w, "invalid tip block structure", http.StatusInternalServerError)
@@ -832,7 +844,7 @@ func (s *Server) handleBlocksQuery(w http.ResponseWriter, r *http.Request) {
     paginatedStart := start + offset
     if paginatedStart > end {
         w.Header().Set("Content-Type", "application/json")
-        json.NewEncoder(w).Encode([]block.Block{})
+        json.NewEncoder(w).Encode([]types.Block{})
         return
     }
     paginatedEnd := paginatedStart + limit - 1
@@ -840,7 +852,7 @@ func (s *Server) handleBlocksQuery(w http.ResponseWriter, r *http.Request) {
         paginatedEnd = end
     }
 
-    var blocks []block.Block
+    var blocks []types.Block
     for h := paginatedStart; h <= paginatedEnd; h++ {
         blk, err := s.store.GetBlockByHeight(h)
         if err != nil {

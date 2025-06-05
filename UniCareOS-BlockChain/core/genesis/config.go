@@ -16,6 +16,7 @@ type InitialParams struct {
 	BlockTime         int    `json:"blockTime,omitempty"`
 	MaxBlockSize      int    `json:"maxBlockSize,omitempty"`
 	ConfirmationDepth int    `json:"confirmationDepth,omitempty"`
+	EpochBlockCount   int    `json:"epochBlockCount,omitempty"` // Number of blocks per epoch
 }
 
 // GenesisConfig represents the full genesis configuration schema.

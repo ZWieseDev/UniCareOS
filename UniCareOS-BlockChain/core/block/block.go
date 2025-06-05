@@ -3,11 +3,10 @@ package block
 import (
 	"encoding/json"
 	"time"
-
 	"unicareos/types/ids"
 )
 
-// BanEvent represents a ban to be enforced network-wide via the blockchain.
+// BanEvent now lives in types/blocktypes.go
 type BanEvent struct {
 	Address   string    `json:"address"`   // Banned peer IP or identifier
 	Expiry    string    `json:"expiry"`    // RFC3339 expiry time
@@ -40,6 +39,8 @@ type Block struct {
 	ParentGasUsed   uint64         `json:"parentGasUsed,omitempty"` // For gas metrics (future)
 	StateRoot       string         `json:"stateRoot,omitempty"`     // Global state snapshot (future)
 	Signature       []byte         `json:"signature,omitempty"`     // Block producer's digital signature
+	Epoch           uint64         `json:"epoch"`                   // Epoch number
+	
 }
 
 // ComputeID computes the hash of the block header fields (excluding BlockID itself)
@@ -56,9 +57,11 @@ func (b *Block) ComputeID() ids.ID {
 		ExtraData       []byte
 		ParentGasUsed   uint64
 		StateRoot       string
+		Epoch           uint64
 	}{
 		b.Version, b.ProtocolVersion, b.Height, b.PrevHash, b.MerkleRoot,
 		b.Timestamp, b.ValidatorDID, b.OpUnitsUsed, b.ExtraData, b.ParentGasUsed, b.StateRoot,
+		b.Epoch,
 	}
 	data, _ := json.Marshal(header)
 	return ids.NewID(data)

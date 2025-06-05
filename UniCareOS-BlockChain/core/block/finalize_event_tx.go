@@ -2,7 +2,7 @@ package block
 
 import (
 	"time"
-	"fmt"
+
 	"errors"
 	"encoding/json"
 	"crypto/ed25519"
@@ -122,9 +122,9 @@ func (tx *FinalizeEventTx) Validate(finalizerPubKey ed25519.PublicKey) error {
 	}
 
 	// The signed data should be the concatenation of txID and the block hash
-	fmt.Printf("\033[32m[VERIFY] txID: %q BlockHash: %q\033[0m\n", tx.TxID, tx.Block.BlockHash)
-	fmt.Printf("\033[32m[VERIFY] Signature (hex): %x\033[0m\n", sig)
-	fmt.Printf("\033[32m[VERIFY] PublicKey (base64): %s\033[0m\n", base64.StdEncoding.EncodeToString(finalizerPubKey))
+
+
+
 	signedData := append([]byte(tx.TxID), []byte(tx.Block.BlockHash)...)
 	if !ed25519.Verify(finalizerPubKey, signedData, sig) {
 		return errors.New("invalid finalizer signature")

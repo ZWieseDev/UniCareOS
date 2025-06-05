@@ -32,3 +32,20 @@ func (l *StdoutAuditLogger) LogEvent(event AuditEvent) {
 func NewStdoutAuditLogger() AuditLogger {
 	return &StdoutAuditLogger{}
 }
+
+// LogMedicalRecordRevision logs an audit event for a medical record revision.
+func LogMedicalRecordRevision(logger AuditLogger, eventID, revisionOf, revisionReason, entityID string, docLineage []string, result string) {
+	metadata := map[string]string{
+		"eventID":    eventID,
+		"revisionOf": revisionOf,
+		"docLineage": fmt.Sprintf("%v", docLineage),
+	}
+	logger.LogEvent(AuditEvent{
+		Timestamp: time.Now(),
+		EventType: "MedicalRecordRevision",
+		EntityID:  entityID,
+		Result:    result,
+		Reason:    revisionReason,
+		Metadata:  metadata,
+	})
+}

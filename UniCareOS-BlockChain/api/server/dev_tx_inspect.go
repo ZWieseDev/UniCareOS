@@ -107,10 +107,18 @@ func (s *Server) handleDevInspectTx(w http.ResponseWriter, r *http.Request) {
 			medicalRecord = rec
 		}
 	}
+	// Extract lineage-related fields if present
+	docLineage := payloadObj["DocLineage"]
+	revisionOf := payloadObj["RevisionOf"]
+	revisionReason := payloadObj["RevisionReason"]
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"txId":   txID,
-		"payload": payloadObj,
+		"txId":           txID,
+		"payload":        payloadObj,
 		"medical_record": medicalRecord,
+		"docLineage":     docLineage,
+		"revisionOf":     revisionOf,
+		"revisionReason": revisionReason,
 	})
 }
