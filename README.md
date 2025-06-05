@@ -105,8 +105,4 @@ For questions or issues, please contact [Your Support Contact Here].
 
 ---
 
-<<<<<<< HEAD
-*Last updated: June 1, 2025*
-=======
-*Last updated: June 1, 2025*
->>>>>>> staging
+
