@@ -23,7 +23,8 @@ import (
 	"unicareos/core"
 	"unicareos/core/mempool"
 	"unicareos/core/chain"
-	"unicareos/types/ids"
+	"unicareos/core/blockchain"
+	
 	)
 
 
@@ -246,6 +247,8 @@ func (n *Network) SetLatestBlockID(id [32]byte) error {
 
 // ProduceBlock creates and broadcasts a new block with the current tip as parent, using the dynamic producer table.
 func (n *Network) ProduceBlock() error {
+	// RED DEBUG PRINT: Confirm block producer code is running
+
 	producers := n.GetSortedDynamicProducers()
 	if len(producers) == 0 {
 		return fmt.Errorf("no dynamic producers available")
@@ -271,7 +274,7 @@ func (n *Network) ProduceBlock() error {
 		fmt.Printf("[LEADER] Not my turn (height %d, leader idx %d, my idx %d)\n", height, leaderIdx, myIdx)
 		return nil // Not this node's turn
 	}
-	//fmt.Printf("[BLOCK PRODUCER] My turn (height %d, leader idx %d)\n", height, leaderIdx)
+
 
 	n.lock.Lock()
 	defer n.lock.Unlock()
@@ -300,30 +303,7 @@ func (n *Network) ProduceBlock() error {
 	// Gather transactions from the mempool (deterministic ordering)
 	var events []block.ChainedEvent
 	var includedTxIDs []string
-	if n.Mempool != nil {
-		txs := n.Mempool.GetAllTxs()
-		for _, tx := range txs {
-			// Convert mempool.Transaction to block.ChainedEvent if needed
-			// If already compatible, just cast/assign
-			var evt block.ChainedEvent
-			// Assuming tx implements or can be mapped to ChainedEvent
-			// If not, map fields accordingly here
-			if ce, ok := any(tx).(block.ChainedEvent); ok {
-				evt = ce
-			} else {
-				// Map manually if types differ
-				idVal, _ := ids.FromString(tx.TxID)
-				evt = block.ChainedEvent{
-					EventID:   idVal,
-					Timestamp: time.Unix(tx.Timestamp, 0),
-					// If you wish to decode tx.Payload to fill more fields, add decoding logic here
-				}
-			}
-			events = append(events, evt)
-			includedTxIDs = append(includedTxIDs, tx.TxID)
-		}
-	}
-
+	// Create newBlock *before* processing transactions so we can pass its pointer
 	newBlock := block.Block{
 		Version:         "",
 		ProtocolVersion: "",
@@ -331,11 +311,110 @@ func (n *Network) ProduceBlock() error {
 		PrevHash:        parentHash,
 		MerkleRoot:      "",
 		Timestamp:       time.Now(),
-		Events:          events, // Include pending events/transactions
+		Events:          nil, // Will fill after processing
 		BanEvents:       nil, // TODO: gather pending ban events
 		ExtraData:       nil,
 		ValidatorDID:    fmt.Sprintf("ed25519:%x", n.PubKey), // Store public key as DID
 	}
+	if n.Mempool != nil {
+		txs := n.Mempool.GetAllTxs()
+		for _, tx := range txs {
+			// Attempt to interpret each transaction as a medical record submission
+			var submission block.MedicalRecordSubmission
+			err := json.Unmarshal(tx.Payload, &submission)
+			if err != nil {
+
+				continue // Skip invalid submissions
+			}
+			// Call SubmitRecordToBlock to process, validate, and append event
+				// --- Full-chain lineage lookup (moved from block package) ---
+				docLineage := []string{}
+				if submission.RevisionOf != "" {
+					found := false
+					// Search current block
+					for _, evt := range newBlock.Events {
+						if evt.EventID.String() == submission.RevisionOf {
+							if evt.DocLineage != nil {
+								docLineage = append(docLineage, evt.DocLineage...)
+							}
+							docLineage = append(docLineage, submission.RevisionOf)
+							found = true
+							break
+						}
+					}
+					// If not found, search previous blocks recursively
+					if !found && n.store != nil {
+						prevEventID := submission.RevisionOf
+						currentHeight := int(newBlock.Height) - 1
+						// Traverse all the way back to the genesis block. This prevents infinite loops as the search will always terminate.
+for currentHeight >= 0 && len(prevEventID) > 0 {
+							blk, err := n.store.GetBlockByHeight(currentHeight)
+							if err != nil {
+								break // out of blocks
+							}
+							fmt.Printf("[LINEAGE DEBUG] Block height %d: numEvents=%d\n", currentHeight, len(blk.Events))
+							for _, e := range blk.Events {
+								fmt.Printf("[LINEAGE DEBUG]   eventID=%s\n", e.EventID.String())
+							}
+
+							foundEvt := false
+							for _, evt := range blk.Events {
+								fmt.Printf("[LINEAGE DEBUG] Comparing evt.EventID.String() = '%s' to prevEventID = '%s'\n", evt.EventID.String(), prevEventID)
+fmt.Printf("[LINEAGE DEBUG] evt.EventID.Bytes = %x\n", evt.EventID[:])
+fmt.Printf("[LINEAGE DEBUG] prevEventID (from JSON) = %s\n", prevEventID)
+// If you have a hex decode utility, decode prevEventID to bytes and print
+if prevBytes, err := hex.DecodeString(prevEventID); err == nil {
+    fmt.Printf("[LINEAGE DEBUG] prevEventID.Bytes = %x\n", prevBytes)
+} else {
+    fmt.Printf("[LINEAGE DEBUG] prevEventID hex decode error: %v\n", err)
+}
+								if evt.EventID.String() == prevEventID {
+									if evt.DocLineage != nil {
+										docLineage = append(docLineage, evt.DocLineage...)
+									}
+									docLineage = append(docLineage, prevEventID)
+									prevEventID = evt.RevisionOf
+									foundEvt = true
+									break
+								}
+							}
+							if !foundEvt {
+    // Not found in this block, keep searching older blocks
+    currentHeight--
+    continue
+}
+currentHeight--
+							currentHeight--
+						}
+						// Debug: print full constructed lineage
+						//fmt.Printf("[LINEAGE] Full revision lineage for %s: %v\n", submission.RevisionOf, docLineage)
+					}
+				}
+				// Reverse lineage to chronological order (oldest first)
+				for i, j := 0, len(docLineage)-1; i < j; i, j = i+1, j-1 {
+					docLineage[i], docLineage[j] = docLineage[j], docLineage[i]
+				}
+				//fmt.Printf("[LINEAGE] Final lineage for event: %v\n", docLineage)
+				submission.DocLineage = docLineage
+				_, err = block.SubmitRecordToBlock(submission, &newBlock)
+			if err != nil {
+
+				continue // Skip failed submissions
+			}
+			// Find the event just appended (last in newBlock.Events)
+			if len(newBlock.Events) > 0 {
+				evt := newBlock.Events[len(newBlock.Events)-1]
+				events = append(events, evt)
+				includedTxIDs = append(includedTxIDs, tx.TxID)
+				// Optionally: print event info
+
+				// Print the lineage actually written to the event in the block
+				//fmt.Printf("[LINEAGE DEBUG] Event %s written to block with lineage: %v\n", evt.EventID.String(), evt.DocLineage)
+			}
+		}
+	}
+	// After processing, assign events to newBlock
+	newBlock.Events = events
 	// --- Set block epoch based on block height and epoch block count ---
 	epochBlockCount := uint64(n.EpochBlockCount)
 	if epochBlockCount == 0 {
@@ -350,7 +429,7 @@ func (n *Network) ProduceBlock() error {
 	}
 
 	if len(includedTxIDs) > 0 {
-		fmt.Printf("[BLOCK PRODUCER] Including txs in block: %v\n", includedTxIDs)
+
 	}
 
 	// Compute BlockID first (for header hash)
@@ -389,9 +468,42 @@ if len(newBlock.Signature) > 0 {
 		for _, txID := range includedTxIDs {
 			n.Mempool.RemoveTx(txID)
 		}
-		fmt.Printf("[BLOCK PRODUCER] Removed %d txs from mempool after block production\n", len(includedTxIDs))
+
 	}
 	fmt.Printf("[CHAIN] Block produced at height %d (BlockID: %x)\n", newBlock.Height, newBlock.BlockID[:])
+
+	// --- Epoch Finalization Enhancement for Local Block Production ---
+	if n.ChainState != nil {
+		n.ChainState.BlocksInEpoch++
+		if n.ChainState.BlocksInEpoch >= uint64(n.EpochBlockCount) {
+			epochNumber := n.ChainState.Epoch
+			// Compute Merkle root for the epoch
+			epochSummaryHash, err := blockchain.ComputeEpochMerkleRoot(epochNumber, n.store)
+			if err != nil {
+				fmt.Println("[EPOCH] Failed to compute epoch Merkle root:", err)
+			} else {
+				// Sign the epoch summary hash with the block producer's key
+				finalizerSignature := ""
+				if len(n.PrivKey) == 64 {
+					sigBytes := core.Sign(n.PrivKey, []byte(epochSummaryHash))
+					finalizerSignature = hex.EncodeToString(sigBytes)
+				}
+				auditLogID := "" // TODO: wire in real audit log ID
+				_, receipt, err := blockchain.FinalizeEpoch(n.store, n.ChainState, epochNumber, finalizerSignature, auditLogID)
+				if err != nil {
+					fmt.Println("[EPOCH] FinalizeEpoch failed:", err)
+				} else {
+					fmt.Printf("\033[33m[EPOCH FINALIZED] Epoch %d finalized. Receipt: %+v\033[0m\n", epochNumber, receipt)
+				}
+				n.ChainState.Epoch++
+				n.ChainState.BlocksInEpoch = 0
+			}
+		}
+		err := n.ChainState.SaveEpochState()
+		if err != nil {
+			fmt.Printf("[EPOCH] Failed to persist epoch state: %v\n", err)
+		}
+	}
 
 	blkIDHex := fmt.Sprintf("%x", newBlock.BlockID[:])
 	// --- Compact propagation: announce block header first ---
@@ -402,7 +514,7 @@ if len(newBlock.Signature) > 0 {
 	// --- Fallback: still broadcast full block for backward compatibility ---
 	n.BroadcastNewBlock(blkBytes, blkIDHex)
 
-	fmt.Printf("[BLOCK PRODUCER] Produced and announced block %s (height %d) at %s by producer %s\n", blkIDHex, nextHeight, newBlock.Timestamp.Format(time.RFC3339), myKey)
+
 	return nil
 }
 
@@ -908,14 +1020,26 @@ func (n *Network) reclaimAndDiscardOrphanBlock(blk block.Block) {
 }
 
 func (n *Network) SaveNewBlock(blk block.Block) error {
+	fmt.Println("[DEBUG] Entered SaveNewBlock for block height:", blk.Height, "blockID:", blk.BlockID)
+
 	// --- Epoch tracking ---
 	if n.ChainState != nil {
 		// Increment BlocksInEpoch
 		n.ChainState.BlocksInEpoch++
+		fmt.Println("[DEBUG] Checking for epoch boundary: BlocksInEpoch=", n.ChainState.BlocksInEpoch, "EpochBlockCount=", n.EpochBlockCount)
 		// Get EpochBlockCount (assume field for now)
 		if n.ChainState.BlocksInEpoch >= uint64(n.EpochBlockCount) { // epoch boundary
-			fmt.Printf("[EPOCH] Epoch %d ended after %d blocks\n", n.ChainState.Epoch, n.ChainState.BlocksInEpoch)
-			// Epoch-end logic here
+			// Epoch-end logic: finalize the epoch
+			finalizerSignature := "" // TODO: wire in real signature
+			auditLogID := "" // TODO: wire in real audit log ID
+			epochNumber := n.ChainState.Epoch
+			_, receipt, err := blockchain.FinalizeEpoch(n.store, n.ChainState, epochNumber, finalizerSignature, auditLogID)
+			if err != nil {
+				fmt.Println("[EPOCH] FinalizeEpoch failed:", err)
+			} else {
+				fmt.Printf("\033[33m[EPOCH FINALIZED] Epoch %d finalized. Receipt: %+v\033[0m\n", epochNumber, receipt)
+			}
+			// Advance epoch
 			n.ChainState.Epoch++
 			n.ChainState.BlocksInEpoch = 0
 		}

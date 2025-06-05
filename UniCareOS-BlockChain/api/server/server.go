@@ -20,6 +20,7 @@ import (
 	"unicareos/types/ids"
 	"unicareos/core/mempool"
 	"github.com/golang-jwt/jwt/v5"
+	"unicareos/core/types"
 
 	log "log"
 
@@ -181,7 +182,7 @@ func (s *Server) Start() error {
 	keyPath := os.Getenv("TLS_KEY_PATH")
 
 	if enableHTTPS == "true" {
-		fmt.Println("[HTTPS] Enabled. Using cert:", certPath, "key:", keyPath)
+		//fmt.Println("[HTTPS] Enabled. Using cert:", certPath, "key:", keyPath)
 		return http.ListenAndServeTLS(s.ListenAddr, certPath, keyPath, nil)
 	} else {
 		fmt.Println("[HTTPS] Disabled. Serving HTTP only!")
@@ -555,7 +556,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tipBlock block.Block
+	var tipBlock types.Block
 	err = json.Unmarshal(tipBlockBytes, &tipBlock)
 	if err != nil {
 		http.Error(w, "invalid tip block structure", http.StatusInternalServerError)
@@ -843,7 +844,7 @@ func (s *Server) handleBlocksQuery(w http.ResponseWriter, r *http.Request) {
     paginatedStart := start + offset
     if paginatedStart > end {
         w.Header().Set("Content-Type", "application/json")
-        json.NewEncoder(w).Encode([]block.Block{})
+        json.NewEncoder(w).Encode([]types.Block{})
         return
     }
     paginatedEnd := paginatedStart + limit - 1
@@ -851,7 +852,7 @@ func (s *Server) handleBlocksQuery(w http.ResponseWriter, r *http.Request) {
         paginatedEnd = end
     }
 
-    var blocks []block.Block
+    var blocks []types.Block
     for h := paginatedStart; h <= paginatedEnd; h++ {
         blk, err := s.store.GetBlockByHeight(h)
         if err != nil {

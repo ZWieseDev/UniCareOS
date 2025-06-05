@@ -1,0 +1,26 @@
+{
+  "record": {
+    "consentStatus": "granted",
+    "dataProvenance": "hospital-system",
+    "docHash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "encryptionContext": {
+      "algorithm": "AES-GCM",
+      "iv": "abcdefghijklmnop1234",
+      "tag": "ZYXWVUTSRQPONMLK9876"
+    },
+    "issuedAt": "2025-05-25T15:00:00Z",
+    "patientDID": "did:example:123456789abcdefghi",
+    "patientId": "YWJjZGVmZ2hpamtsbW5vcA==",
+    "payloadSignature": "QHOgzrGDgCLeepAAdwK5gPEP5E2yyPdqDGueTN4S8gOKIaa+dwJs+z11ghspAG3NsJIMOdRAX2+i1rN/WwB0Bg==",
+    "providerId": "encrypted-provider-id",
+    "recordId": "b0f3e7a4-1e8b-4c0e-bc8d-7c9b6a6c2e4f",
+    "recordType": "lab_result",
+    "retentionPolicy": "standard",
+    "schemaVersion": "1.0",
+    "signedBy": "test_wallet"
+  },
+  "signature": "g78Li1R4Rlxm5rqW0ZyvA+sSbBFhUxOqicBeeuyJ7yxCyjTPTd3GqEcUv1B/ZzuiboMBqkXBkhtHHw1KuogYCA==",
+  "walletAddress": "test_wallet",
+  "revisionOf": "fca4c587fbf984044ff68e056a1e229d2ca7264c4fbdecaa721662b4bee76c0a",
+  "revisionReason": "Correction: updated lab result after review"
+}
